@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion, HTMLMotionProps } from "framer-motion";
 import { Car, Building2, Receipt, CheckCircle2 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { EtcUpload } from "../components/EtcUpload";
 
 // Types
 type TabType = "unsubmitted" | "submitted";
@@ -177,6 +178,13 @@ export default function Home() {
           icon={<Car size={28} />}
           iconContainerClassName="bg-emerald-50 text-emerald-500"
         />
+      </div>
+
+      <div className="mb-10">
+        <h2 className="text-lg font-bold tracking-tight text-slate-800 mb-4 px-2">
+          ETC連携
+        </h2>
+        <EtcUpload />
       </div>
 
       <UnsubmittedAlert
