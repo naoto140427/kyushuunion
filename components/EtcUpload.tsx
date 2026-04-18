@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UploadCloud, CheckCircle2, AlertCircle } from "lucide-react";
 import Papa from "papaparse";
 import { cn } from "../lib/utils";
+import { YuiLoading } from "./YuiLoading";
 
-type UploadState = "idle" | "dragging" | "success" | "error";
+type UploadState = "idle" | "dragging" | "loading" | "success" | "error";
 
 interface ParsedEtcData {
   route: string;
@@ -21,7 +22,7 @@ interface EtcCsvRow {
   [key: string]: any;
 }
 
-const SPRING_ANIMATION = { type: "spring" as const, stiffness: 400, damping: 25 };
+import { YUI_TRANSITION } from "../lib/utils";
 const TARGET_DATE = "26/04/04";
 
 export const EtcUpload: React.FC = () => {
@@ -30,7 +31,7 @@ export const EtcUpload: React.FC = () => {
   const [parsedData, setParsedData] = useState<ParsedEtcData | null>(null);
 
   const processFile = (file: File) => {
-    setUploadState("idle");
+    setUploadState("loading");
     setErrorMessage("");
     setParsedData(null);
 
@@ -48,46 +49,48 @@ export const EtcUpload: React.FC = () => {
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
-          try {
-            const data = results.data;
-            const targetRows = data.filter(row => row["利用年月日（自）"] === TARGET_DATE);
+          setTimeout(() => {
+            try {
+              const data = results.data;
+              const targetRows = data.filter(row => row["利用年月日（自）"] === TARGET_DATE);
 
-            if (targetRows.length === 0) {
+              if (targetRows.length === 0) {
+                setUploadState("error");
+                setErrorMessage(`指定された日付（${TARGET_DATE}）のデータが見つかりません。`);
+                return;
+              }
+
+              let totalCost = 0;
+              const routeParts: string[] = [];
+
+              targetRows.forEach(row => {
+                const startIC = row["利用ＩＣ（自）"] || "";
+                const endIC = row["利用ＩＣ（至）"] || "";
+                const costStr = row["後納料金"] || "0";
+
+                if (startIC && endIC) {
+                  routeParts.push(`${startIC}〜${endIC}`);
+                }
+
+                const cost = parseInt(costStr, 10);
+                if (!isNaN(cost)) {
+                  totalCost += cost;
+                }
+              });
+
+              const combinedRoute = routeParts.join("　");
+
+              setParsedData({
+                route: combinedRoute,
+                totalCost
+              });
+              setUploadState("success");
+
+            } catch (error) {
               setUploadState("error");
-              setErrorMessage(`指定された日付（${TARGET_DATE}）のデータが見つかりません。`);
-              return;
+              setErrorMessage("CSVデータの解析中にエラーが発生しました。");
             }
-
-            let totalCost = 0;
-            const routeParts: string[] = [];
-
-            targetRows.forEach(row => {
-              const startIC = row["利用ＩＣ（自）"] || "";
-              const endIC = row["利用ＩＣ（至）"] || "";
-              const costStr = row["後納料金"] || "0";
-
-              if (startIC && endIC) {
-                routeParts.push(`${startIC}〜${endIC}`);
-              }
-
-              const cost = parseInt(costStr, 10);
-              if (!isNaN(cost)) {
-                totalCost += cost;
-              }
-            });
-
-            const combinedRoute = routeParts.join("　");
-
-            setParsedData({
-              route: combinedRoute,
-              totalCost
-            });
-            setUploadState("success");
-
-          } catch (error) {
-            setUploadState("error");
-            setErrorMessage("CSVデータの解析中にエラーが発生しました。");
-          }
+          }, 800);
         },
         error: () => {
           setUploadState("error");
@@ -102,9 +105,7 @@ export const EtcUpload: React.FC = () => {
     };
 
     reader.readAsText(file, "Shift_JIS");
-  };
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+  };  const handleDragOver = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (uploadState !== "success") {
@@ -154,13 +155,24 @@ export const EtcUpload: React.FC = () => {
   return (
     <div className="w-full">
       <AnimatePresence mode="wait">
-        {uploadState === "success" && parsedData ? (
+                {uploadState === "loading" ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={YUI_TRANSITION}
+            className="flex flex-col items-center justify-center w-full min-h-[200px] bg-white/50 backdrop-blur-md rounded-[32px] border border-white/40 shadow-[0_4px_20px_rgb(0,0,0,0.02)]"
+          >
+            <YuiLoading />
+          </motion.div>
+        ) : uploadState === "success" && parsedData ? (
           <motion.div
             key="success"
             initial={{ opacity: 0, scale: 0.9, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -10 }}
-            transition={SPRING_ANIMATION}
+            transition={YUI_TRANSITION}
             className="bg-white/70 backdrop-blur-md border border-white/40 p-6 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-400 rounded-l-full" />
@@ -204,7 +216,7 @@ export const EtcUpload: React.FC = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            transition={SPRING_ANIMATION}
+            transition={YUI_TRANSITION}
           >
             <label
               onDragOver={handleDragOver}
@@ -227,7 +239,7 @@ export const EtcUpload: React.FC = () => {
 
               <motion.div
                 animate={uploadState === "dragging" ? { y: -5, scale: 1.1 } : { y: 0, scale: 1 }}
-                transition={SPRING_ANIMATION}
+                transition={YUI_TRANSITION}
                 className={cn(
                   "p-4 rounded-[24px] mb-3 transition-colors duration-300",
                   uploadState === "dragging" ? "bg-pink-100 text-pink-500" : "bg-slate-100 text-slate-400 group-hover:bg-pink-50 group-hover:text-pink-400"
