@@ -25,7 +25,7 @@ interface EtcCsvRow {
 import { YUI_TRANSITION } from "../lib/utils";
 const TARGET_DATE = "26/04/04";
 
-export const EtcUpload: React.FC = () => {
+export const EtcUpload: React.FC<{ onDataParsed?: (data: ParsedEtcData | null) => void }> = ({ onDataParsed }) => {
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [parsedData, setParsedData] = useState<ParsedEtcData | null>(null);
@@ -34,6 +34,7 @@ export const EtcUpload: React.FC = () => {
     setUploadState("loading");
     setErrorMessage("");
     setParsedData(null);
+    if (onDataParsed) onDataParsed(null);
 
     const reader = new FileReader();
 
@@ -84,6 +85,7 @@ export const EtcUpload: React.FC = () => {
                 route: combinedRoute,
                 totalCost
               });
+              if (onDataParsed) onDataParsed({ route: combinedRoute, totalCost });
               setUploadState("success");
 
             } catch (error) {
@@ -149,6 +151,7 @@ export const EtcUpload: React.FC = () => {
   const resetUpload = () => {
     setUploadState("idle");
     setParsedData(null);
+    if (onDataParsed) onDataParsed(null);
     setErrorMessage("");
   };
 
