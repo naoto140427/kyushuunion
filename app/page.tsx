@@ -25,6 +25,7 @@ interface AlertProps {
   title: string;
   description: string;
   onAction?: () => void;
+  isLoading?: boolean;
 }
 
 interface NavigationBarProps {
@@ -92,7 +93,7 @@ const ActionCard: React.FC<ActionCardProps> = ({
   );
 };
 
-const UnsubmittedAlert: React.FC<AlertProps> = ({ title, description, onAction }) => {
+const UnsubmittedAlert: React.FC<AlertProps> = ({ title, description, onAction, isLoading }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -114,11 +115,30 @@ const UnsubmittedAlert: React.FC<AlertProps> = ({ title, description, onAction }
           <p className="text-xs text-slate-500 mt-1">{description}</p>
         </div>
         <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={onAction}
-          className="bg-slate-700 text-white text-xs px-4 py-2 rounded-[16px] font-medium shadow-sm hover:bg-slate-600 transition-colors"
+          whileTap={!isLoading ? { scale: 0.9 } : {}}
+          onClick={isLoading ? undefined : onAction}
+          disabled={isLoading}
+          className="bg-slate-700 text-white text-xs px-4 py-2 rounded-[16px] font-medium shadow-sm hover:bg-slate-600 transition-colors disabled:opacity-80 flex items-center justify-center min-w-[80px]"
         >
-          処理する
+          {isLoading ? (
+            <div className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-1.5 h-1.5 bg-white rounded-full"
+                  animate={{ y: [0, -3, 0] }}
+                  transition={{
+                    duration: 0.5,
+                    repeat: Infinity,
+                    delay: i * 0.1,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            "処理する"
+          )}
         </motion.button>
       </div>
     </motion.div>
@@ -160,6 +180,42 @@ const BottomNavigationBar: React.FC<NavigationBarProps> = ({ activeTab, onTabCha
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("unsubmitted");
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadExcel = async () => {
+    try {
+      setIsDownloading(true);
+      const res = await fetch("/api/export-excel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "shikko",
+          date: "2026/04/04",
+          destinations: "大分宮河内〜熊本",
+          totalDistance: 240,
+          etcFee: 4500,
+          holidayAllowance: 1000,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to export Excel");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "seisan.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download Error:", error);
+      alert("ダウンロードに失敗しました");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700 font-sans selection:bg-pink-100 p-6 pb-32">
@@ -190,6 +246,8 @@ export default function Home() {
       <UnsubmittedAlert
         title="未提出の精算があります"
         description="4月4日 執行委員会 (大分宮河内〜熊本)"
+        onAction={handleDownloadExcel}
+        isLoading={isDownloading}
       />
 
       <BottomNavigationBar activeTab={activeTab} onTabChange={setActiveTab} />
