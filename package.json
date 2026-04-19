@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/naoto140427/kyushuunion#readme",
   "dependencies": {
+    "@supabase/supabase-js": "^2.103.3",
     "@tailwindcss/postcss": "^4.2.2",
     "clsx": "^2.1.1",
     "exceljs": "^4.4.0",
