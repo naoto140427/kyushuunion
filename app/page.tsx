@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, HTMLMotionProps } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, HTMLMotionProps, AnimatePresence } from "framer-motion";
 import { Car, Building2, Receipt, CheckCircle2 } from "lucide-react";
 import { cn, YUI_TRANSITION } from "../lib/utils";
 import { EtcUpload } from "../components/EtcUpload";
+import { YuiLoading } from "../components/YuiLoading";
+import { supabase } from "../lib/supabase";
+import { Database } from "../types/database.types";
 
 // Types
 type TabType = "unsubmitted" | "submitted";
+type Report = Database['public']['Tables']['reports']['Row'];
 
 interface HeaderProps {
   title: string;
@@ -31,15 +35,12 @@ interface AlertProps {
 interface NavigationBarProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
+  unsubmittedCount: number;
+  submittedCount: number;
 }
-
-// Constants
-
 
 // Components
 const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
-  // Title with the period colored differently as specified.
-  // Assuming the title ends with a period.
   const titleText = title.replace(/\.$/, "");
   const hasPeriod = title.endsWith(".");
 
@@ -98,10 +99,10 @@ const UnsubmittedAlert: React.FC<AlertProps> = ({ title, description, onAction, 
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
       transition={{ delay: 0.2, ...YUI_TRANSITION }}
       className="bg-white/70 backdrop-blur-md border border-white/40 p-5 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
     >
-      {/* Accent Line */}
       <div className="absolute top-0 left-0 w-1.5 h-full bg-pink-400 rounded-l-full" />
       <div className="flex justify-between items-center pl-2">
         <div>
@@ -145,14 +146,14 @@ const UnsubmittedAlert: React.FC<AlertProps> = ({ title, description, onAction, 
   );
 };
 
-const BottomNavigationBar: React.FC<NavigationBarProps> = ({ activeTab, onTabChange }) => {
+const BottomNavigationBar: React.FC<NavigationBarProps> = ({ activeTab, onTabChange, unsubmittedCount, submittedCount }) => {
   return (
     <div className="fixed bottom-6 left-0 w-full px-6 flex justify-center z-50">
       <div className="bg-white/70 backdrop-blur-md border border-white/40 p-1.5 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex gap-1 w-full max-w-sm">
         <button
           onClick={() => onTabChange("unsubmitted")}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-3 rounded-[24px] text-sm font-medium transition-all duration-300",
+            "flex-1 flex items-center justify-center gap-2 py-3 rounded-[24px] text-sm font-medium transition-all duration-300 relative",
             activeTab === "unsubmitted"
               ? "bg-slate-100 text-slate-800 shadow-sm"
               : "text-slate-400 hover:text-slate-500"
@@ -160,6 +161,11 @@ const BottomNavigationBar: React.FC<NavigationBarProps> = ({ activeTab, onTabCha
         >
           <Receipt size={18} />
           未提出
+          {unsubmittedCount > 0 && (
+            <span className="bg-pink-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+              {unsubmittedCount}
+            </span>
+          )}
         </button>
         <button
           onClick={() => onTabChange("submitted")}
@@ -172,6 +178,11 @@ const BottomNavigationBar: React.FC<NavigationBarProps> = ({ activeTab, onTabCha
         >
           <CheckCircle2 size={18} />
           提出済
+          {submittedCount > 0 && (
+            <span className="bg-slate-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+              {submittedCount}
+            </span>
+          )}
         </button>
       </div>
     </div>
@@ -181,20 +192,67 @@ const BottomNavigationBar: React.FC<NavigationBarProps> = ({ activeTab, onTabCha
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("unsubmitted");
   const [isDownloading, setIsDownloading] = useState(false);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoadingReports, setIsLoadingReports] = useState(true);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('reports')
+          .select('*')
+          .order('date', { ascending: true }); // Oldest first
+
+        if (error) {
+          console.error("Error fetching reports:", error);
+          return;
+        }
+
+        if (data) {
+          setReports(data);
+        }
+      } catch (err) {
+        console.error("Unexpected error during fetch:", err);
+      } finally {
+        setIsLoadingReports(false);
+      }
+    };
+
+    fetchReports();
+  }, []);
+
+  const pendingReports = reports.filter(r => r.status === 'pending');
+  const submittedReports = reports.filter(r => r.status === 'submitted');
+  const oldestPendingReport = pendingReports.length > 0 ? pendingReports[0] : null;
 
   const handleDownloadExcel = async () => {
+    if (!oldestPendingReport) return;
+
     try {
       setIsDownloading(true);
+
+      // Attempt to extract string representation of destinations
+      let destinationsStr = "";
+      if (oldestPendingReport.destinations) {
+        if (typeof oldestPendingReport.destinations === 'string') {
+          destinationsStr = oldestPendingReport.destinations;
+        } else if (Array.isArray(oldestPendingReport.destinations)) {
+          destinationsStr = oldestPendingReport.destinations.join('〜');
+        } else {
+          destinationsStr = JSON.stringify(oldestPendingReport.destinations);
+        }
+      }
+
       const res = await fetch("/api/export-excel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type: "shikko",
-          date: "2026/04/04",
-          destinations: "大分宮河内〜熊本",
-          totalDistance: 240,
-          etcFee: 4500,
-          holidayAllowance: 1000,
+          type: oldestPendingReport.type,
+          date: oldestPendingReport.date,
+          destinations: destinationsStr,
+          totalDistance: oldestPendingReport.total_distance,
+          etcFee: oldestPendingReport.etc_fee,
+          holidayAllowance: oldestPendingReport.holiday_allowance,
         }),
       });
 
@@ -215,6 +273,22 @@ export default function Home() {
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const formatReportDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getMonth() + 1}月${date.getDate()}日`;
+  };
+
+  const getReportTypeLabel = (type: string) => {
+    return type === 'shikko' ? '執行委員会' : '職場訪問';
+  };
+
+  const getDestinationsPreview = (destinations: any) => {
+    if (!destinations) return '';
+    if (typeof destinations === 'string') return ` (${destinations})`;
+    if (Array.isArray(destinations)) return ` (${destinations.join('〜')})`;
+    return '';
   };
 
   return (
@@ -243,14 +317,44 @@ export default function Home() {
         <EtcUpload />
       </div>
 
-      <UnsubmittedAlert
-        title="未提出の精算があります"
-        description="4月4日 執行委員会 (大分宮河内〜熊本)"
-        onAction={handleDownloadExcel}
-        isLoading={isDownloading}
-      />
+      <AnimatePresence mode="wait">
+        {isLoadingReports ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="py-10 flex justify-center"
+          >
+            <YuiLoading />
+          </motion.div>
+        ) : oldestPendingReport ? (
+          <UnsubmittedAlert
+            key="alert"
+            title="未提出の精算があります"
+            description={`${formatReportDate(oldestPendingReport.date)} ${getReportTypeLabel(oldestPendingReport.type)}${getDestinationsPreview(oldestPendingReport.destinations)}`}
+            onAction={handleDownloadExcel}
+            isLoading={isDownloading}
+          />
+        ) : (
+          <motion.div
+            key="no-alert"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-center py-6"
+          >
+            <p className="text-sm text-slate-400 font-medium">未提出の精算はありません ✨</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <BottomNavigationBar activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNavigationBar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        unsubmittedCount={pendingReports.length}
+        submittedCount={submittedReports.length}
+      />
     </div>
   );
 }
