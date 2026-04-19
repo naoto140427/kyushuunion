@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { motion, HTMLMotionProps } from "framer-motion";
 import { Car, Building2, Receipt, CheckCircle2 } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, YUI_TRANSITION } from "../lib/utils";
+import { EtcUpload } from "../components/EtcUpload";
 
 // Types
 type TabType = "unsubmitted" | "submitted";
@@ -32,7 +33,7 @@ interface NavigationBarProps {
 }
 
 // Constants
-const SPRING_ANIMATION = { type: "spring" as const, stiffness: 400, damping: 25 };
+
 
 // Components
 const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
@@ -68,7 +69,7 @@ const ActionCard: React.FC<ActionCardProps> = ({
     <motion.button
       whileHover={{ scale: 0.98 }}
       whileTap={{ scale: 0.95 }}
-      transition={SPRING_ANIMATION}
+      transition={YUI_TRANSITION}
       className={cn(
         "relative overflow-hidden bg-white/70 backdrop-blur-md border border-white/40 p-6 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center gap-5 text-left group",
         className
@@ -96,7 +97,7 @@ const UnsubmittedAlert: React.FC<AlertProps> = ({ title, description, onAction }
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.2, ...SPRING_ANIMATION }}
+      transition={{ delay: 0.2, ...YUI_TRANSITION }}
       className="bg-white/70 backdrop-blur-md border border-white/40 p-5 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
     >
       {/* Accent Line */}
@@ -177,6 +178,13 @@ export default function Home() {
           icon={<Car size={28} />}
           iconContainerClassName="bg-emerald-50 text-emerald-500"
         />
+      </div>
+
+      <div className="mb-10">
+        <h2 className="text-lg font-bold tracking-tight text-slate-800 mb-4 px-2">
+          ETC連携
+        </h2>
+        <EtcUpload />
       </div>
 
       <UnsubmittedAlert
