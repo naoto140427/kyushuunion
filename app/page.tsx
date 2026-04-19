@@ -5,6 +5,7 @@ import { motion, HTMLMotionProps, AnimatePresence } from "framer-motion";
 import { Car, Building2, Receipt, CheckCircle2 } from "lucide-react";
 import { cn, YUI_TRANSITION } from "../lib/utils";
 import { EtcUpload } from "../components/EtcUpload";
+import { LocationInput } from "../components/LocationInput";
 import { YuiLoading } from "../components/YuiLoading";
 import { supabase } from "../lib/supabase";
 import { Database } from "../types/database.types";
@@ -194,6 +195,39 @@ export default function Home() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoadingReports, setIsLoadingReports] = useState(true);
+  const [locationData, setLocationData] = useState<{ destination: string; distance: number; allowance: number } | null>(null);
+  const [etcData, setEtcData] = useState<{ route: string; totalCost: number } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeAction, setActiveAction] = useState<"shikko" | "shokuho" | null>(null);
+
+  const handleSubmitReport = async () => {
+    if (!locationData) return;
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from('reports').insert({
+        type: activeAction || 'shikko',
+        date: new Date().toISOString().split('T')[0],
+        destinations: locationData.destination,
+        total_distance: locationData.distance,
+        travel_allowance: locationData.allowance,
+        etc_fee: etcData ? etcData.totalCost : 0,
+        holiday_allowance: 0,
+        status: 'pending'
+      });
+
+      if (error) throw error;
+
+      alert("申請を保存しました");
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("保存に失敗しました");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -297,12 +331,14 @@ export default function Home() {
 
       <div className="grid grid-cols-1 gap-5 mb-10">
         <ActionCard
+          onClick={() => setActiveAction("shikko")}
           title="執行委員会用"
           description="開催場所を検索して自動計算"
           icon={<Building2 size={28} />}
           iconContainerClassName="bg-blue-50 text-blue-500"
         />
         <ActionCard
+          onClick={() => setActiveAction("shokuho")}
           title="職場訪問用"
           description="複数店舗のルート距離を自動計算"
           icon={<Car size={28} />}
@@ -310,11 +346,40 @@ export default function Home() {
         />
       </div>
 
+
+      <AnimatePresence mode="wait">
+        {activeAction && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-10 overflow-hidden"
+          >
+            <h2 className="text-lg font-bold tracking-tight text-slate-800 mb-4 px-2">
+              {activeAction === 'shikko' ? '執行委員会用' : '職場訪問用'} - 目的地検索
+            </h2>
+            <LocationInput onLocationCalculated={setLocationData} />
+
+            {locationData && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={handleSubmitReport}
+                disabled={isSubmitting}
+                className="w-full mt-6 bg-slate-800 text-white font-bold py-4 rounded-[24px] shadow-lg flex justify-center items-center gap-2 hover:bg-slate-700 transition-colors disabled:opacity-50"
+              >
+                {isSubmitting ? <YuiLoading className="scale-50" /> : "この内容で申請を作成する"}
+              </motion.button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="mb-10">
         <h2 className="text-lg font-bold tracking-tight text-slate-800 mb-4 px-2">
           ETC連携
         </h2>
-        <EtcUpload />
+        <EtcUpload onDataParsed={setEtcData} />
       </div>
 
       <AnimatePresence mode="wait">
