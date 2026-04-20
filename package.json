@@ -13,15 +13,34 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/naoto140427/kyushuunion/issues"
   },
   "homepage": "https://github.com/naoto140427/kyushuunion#readme",
   "dependencies": {
+    "@react-google-maps/api": "^2.20.8",
+    "@supabase/supabase-js": "^2.103.3",
+    "@tailwindcss/postcss": "^4.2.2",
     "clsx": "^2.1.1",
+    "exceljs": "^4.4.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",
-    "tailwind-merge": "^3.5.0"
+    "next": "^16.2.4",
+    "papaparse": "^5.5.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^3.4.1"
+  },
+  "devDependencies": {
+    "@types/google.maps": "^3.64.0",
+    "@types/node": "^25.6.0",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.10",
+    "typescript": "^6.0.3"
   }
 }
