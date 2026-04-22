@@ -1,5 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import { LayoutWrapper } from '../components/LayoutWrapper';
+import { ReportsProvider } from '../contexts/ReportsContext';
 
 export const metadata: Metadata = {
   title: '精算アプリ',
@@ -13,7 +15,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        <ReportsProvider>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+        </ReportsProvider>
+      </body>
     </html>
   )
 }
