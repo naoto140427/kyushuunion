@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const worksheet = workbook.worksheets[0];
 
     // セル番地のマッピング定義（結合セル等に合わせて後で微調整します）
-    const cellMap = isShikko ? {
+    const cellMap: Record<string, string> = isShikko ? {
       // 執行委員会用のマッピング
       dateYear: 'T1',       // 作成日（年）
       dateMonth: 'X1',      // 作成日（月）
