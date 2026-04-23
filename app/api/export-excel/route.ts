@@ -1,75 +1,101 @@
 import { NextResponse } from 'next/server';
 import ExcelJS from 'exceljs';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const data = await request.json();
+    const data = await req.json(); // フロントから送られてくるレポートデータ
+
+    // レポートの種類（shikko / shokuho）に応じてテンプレートとマッピングを切り替える
+    const isShikko = data.type === 'shikko';
+    const templateFileName = isShikko ? 'shikko_template.xlsx' : 'shokuho_template.xlsx';
+    const templatePath = path.join(process.cwd(), 'public/templates', templateFileName);
 
     const workbook = new ExcelJS.Workbook();
-    const templatePath = path.join(process.cwd(), 'public', 'templates', 'shikko_template.xlsx');
 
     try {
-      // テンプレートが存在する場合は読み込む
-      if (fs.existsSync(templatePath)) {
-        await workbook.xlsx.readFile(templatePath);
-      } else {
-        // テンプレートが存在しない場合はモック作成
-        const sheet = workbook.addWorksheet('精算書');
-        sheet.getCell('A1').value = '出張精算書 (モック)';
-        sheet.getCell('A3').value = '種類:';
-        sheet.getCell('A4').value = '出張日:';
-        sheet.getCell('A5').value = '目的地:';
-        sheet.getCell('A6').value = '総距離:';
-        sheet.getCell('A7').value = 'ETC料金:';
-        sheet.getCell('A8').value = '休日手当:';
-      }
-    } catch (err) {
-      console.warn("Failed to load template, using mock instead", err);
-      // フォールバック
-      if (workbook.worksheets.length === 0) {
-        workbook.addWorksheet('精算書');
-      }
+      await workbook.xlsx.readFile(templatePath);
+    } catch (error) {
+      console.warn("テンプレートが見つかりませんでした。空のモックを作成します。", error);
+      const sheet = workbook.addWorksheet('精算書');
+      sheet.getCell('A1').value = 'テンプレートが配置されていません';
     }
 
     const worksheet = workbook.worksheets[0];
 
-    // データの書き込み（セル位置はモックベース）
-    worksheet.getCell('E6').value = data.date || ''; // 出張日
-    worksheet.getCell('Q6').value = data.destinations || ''; // 目的地
-    worksheet.getCell('E7').value = data.totalDistance || 0; // 距離
-    worksheet.getCell('E8').value = data.etcFee || 0; // ETC料金
-    worksheet.getCell('E9').value = data.holidayAllowance || 0; // 休日手当
+    // セル番地のマッピング定義（結合セル等に合わせて後で微調整します）
+    const cellMap: Record<string, string> = isShikko ? {
+      // 執行委員会用のマッピング
+      dateYear: 'T1',       // 作成日（年）
+      dateMonth: 'X1',      // 作成日（月）
+      dateDay: 'Z1',        // 作成日（日）
+      destination: 'P6',    // 出張先
+      distance: 'N15',      // 自家用車 走行距離合計(往復)
+      allowance: 'W15',     // 自家用車 金額
+      etcFee: 'W17',        // 有料道路 金額
+      etcRoute: 'F18',      // 有料道路 経路
+      userName: 'F34'       // 氏名
+    } : {
+      // 職場訪問用のマッピング
+      dateYear: 'T1',
+      dateMonth: 'X1',
+      dateDay: 'Z1',
+      dest1: 'O6',          // 出張先①
+      dest2: 'U6',          // 出張先②
+      dest3: 'AA6',         // 出張先③
+      distance: 'N13',      // 自家用車 走行距離合計(往復)
+      allowance: 'W13',     // 自家用車 金額
+      etcFee: 'W15',        // 有料道路 金額
+      userName: 'F32'       // 氏名
+    };
 
-    // チェックボックスの表現
-    if (data.type === 'shikko') {
-      worksheet.getCell('C3').value = '☑ 執行委員会';
-      worksheet.getCell('G3').value = '□ 職場訪問';
-    } else if (data.type === 'visit') {
-      worksheet.getCell('C3').value = '□ 執行委員会';
-      worksheet.getCell('G3').value = '☑ 職場訪問';
-    } else {
-      worksheet.getCell('C3').value = '□ 執行委員会';
-      worksheet.getCell('G3').value = '□ 職場訪問';
+    // 📝 データの流し込み実行
+    if (worksheet && data) {
+      // 申請日を年・月・日に分割して挿入
+      if (data.created_at || data.date) {
+        const date = new Date(data.created_at || data.date);
+        worksheet.getCell(cellMap.dateYear).value = date.getFullYear();
+        worksheet.getCell(cellMap.dateMonth).value = date.getMonth() + 1;
+        worksheet.getCell(cellMap.dateDay).value = date.getDate();
+      }
+
+      // 共通項目の挿入
+      worksheet.getCell(cellMap.distance).value = data.total_distance;
+      worksheet.getCell(cellMap.allowance).value = data.travel_allowance || data.allowance;
+      worksheet.getCell(cellMap.etcFee).value = data.etc_fee;
+      if (data.user_name) worksheet.getCell(cellMap.userName).value = data.user_name;
+
+      // タイプごとの固有項目の挿入
+      if (isShikko) {
+        worksheet.getCell(cellMap.destination).value = typeof data.destinations === 'string' ? data.destinations : JSON.stringify(data.destinations);
+        // 必要に応じてETC経路なども挿入可能
+      } else {
+        // 職場訪問の場合は、カンマ区切り等で保存された目的地を分割して挿入（仮実装）
+        let dests: string[] = [];
+        if (typeof data.destinations === 'string') {
+          dests = data.destinations.split(',');
+        } else if (Array.isArray(data.destinations)) {
+          dests = data.destinations;
+        }
+
+        if (dests[0]) worksheet.getCell(cellMap.dest1).value = dests[0].trim();
+        if (dests[1]) worksheet.getCell(cellMap.dest2).value = dests[1].trim();
+        if (dests[2]) worksheet.getCell(cellMap.dest3).value = dests[2].trim();
+      }
     }
 
-    // Bufferとして書き出し
     const buffer = await workbook.xlsx.writeBuffer();
 
-    return new NextResponse(buffer, {
+    return new NextResponse(buffer as any, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': 'attachment; filename="seisan.xlsx"',
+        'Content-Disposition': `attachment; filename="seisan_${data.id || 'export'}.xlsx"`,
       },
     });
-
   } catch (error) {
-    console.error('Excel Export Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate Excel file' },
-      { status: 500 }
-    );
+    console.error('Excel生成エラー:', error);
+    return NextResponse.json({ error: 'Excelの生成に失敗しました' }, { status: 500 });
   }
 }
