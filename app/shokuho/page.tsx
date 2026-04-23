@@ -7,11 +7,13 @@ import { ChevronLeft } from "lucide-react";
 import { LocationInput } from "../../components/LocationInput";
 import { YuiLoading } from "../../components/YuiLoading";
 import { supabase } from "../../lib/supabase";
+import { useReportsContext } from "../../contexts/ReportsContext";
 
 export default function ShokuhoPage() {
   const router = useRouter();
   const [locationData, setLocationData] = useState<{ destination: string; distance: number; allowance: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { refetch } = useReportsContext();
 
   const handleSubmitReport = async () => {
     if (!locationData) return;
@@ -32,6 +34,7 @@ export default function ShokuhoPage() {
       if (error) throw error;
 
       alert("申請を保存しました");
+      await refetch();
       router.push("/");
     } catch (err) {
       console.error(err);

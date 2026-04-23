@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Receipt, CheckCircle2 } from "lucide-react";
+import { Receipt, CheckCircle2, Download } from "lucide-react";
 import { Header } from "../../components/ui/Header";
 import { YuiLoading } from "../../components/YuiLoading";
 import { useReportsContext } from "../../contexts/ReportsContext";
@@ -17,6 +17,7 @@ export default function HistoryPage() {
   const { reports, pendingReports, submittedReports, isLoading, refetch } = useReportsContext();
   const [activeTab, setActiveTab] = useState<TabType>("pending");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const formatReportDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -51,6 +52,35 @@ export default function HistoryPage() {
       setUpdatingId(null);
     }
   };
+
+  const handleDownloadExcel = async (reportData: Report) => {
+    try {
+      setDownloadingId(reportData.id);
+      const response = await fetch('/api/export-excel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reportData),
+      });
+
+      if (!response.ok) throw new Error('ダウンロードに失敗しました');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `精算書_${getDestinationsPreview(reportData.destinations) || '出力'}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert('Excelの生成に失敗しました');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
 
   const currentReports = activeTab === "pending" ? pendingReports : submittedReports;
 
@@ -125,24 +155,40 @@ export default function HistoryPage() {
                   <p className="text-sm text-slate-600 line-clamp-1">{getDestinationsPreview(report.destinations)}</p>
                 </div>
 
-                <div className="pl-2 flex justify-end">
-                  {activeTab === 'pending' ? (
-                    <button
-                      onClick={() => handleStatusChange(report.id, 'submitted')}
-                      disabled={updatingId === report.id}
-                      className="bg-slate-800 text-white text-xs px-4 py-2 rounded-[16px] font-medium shadow-sm hover:bg-slate-700 transition-colors disabled:opacity-50"
-                    >
-                      {updatingId === report.id ? "更新中..." : "提出済みにする"}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleStatusChange(report.id, 'pending')}
-                      disabled={updatingId === report.id}
-                      className="bg-slate-100 text-slate-600 text-xs px-4 py-2 rounded-[16px] font-medium hover:bg-slate-200 transition-colors disabled:opacity-50"
-                    >
-                      {updatingId === report.id ? "更新中..." : "未提出に戻す"}
-                    </button>
-                  )}
+                <div className="pl-2 flex flex-col gap-2">
+                  <button
+                    onClick={() => handleDownloadExcel(report)}
+                    disabled={downloadingId === report.id}
+                    className="w-full bg-blue-50 text-blue-600 border border-blue-100 text-xs px-4 py-3 rounded-[16px] font-bold shadow-sm hover:bg-blue-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {downloadingId === report.id ? (
+                      <YuiLoading className="scale-50 h-4" />
+                    ) : (
+                      <>
+                        <Download size={16} />
+                        精算書ダウンロード
+                      </>
+                    )}
+                  </button>
+                  <div className="flex justify-end">
+                    {activeTab === 'pending' ? (
+                      <button
+                        onClick={() => handleStatusChange(report.id, 'submitted')}
+                        disabled={updatingId === report.id}
+                        className="bg-slate-800 text-white text-xs px-4 py-2 rounded-[16px] font-medium shadow-sm hover:bg-slate-700 transition-colors disabled:opacity-50"
+                      >
+                        {updatingId === report.id ? "更新中..." : "提出済みにする"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleStatusChange(report.id, 'pending')}
+                        disabled={updatingId === report.id}
+                        className="bg-slate-100 text-slate-600 text-xs px-4 py-2 rounded-[16px] font-medium hover:bg-slate-200 transition-colors disabled:opacity-50"
+                      >
+                        {updatingId === report.id ? "更新中..." : "未提出に戻す"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
