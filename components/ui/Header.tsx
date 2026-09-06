@@ -18,11 +18,11 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
       animate={{ opacity: 1, y: 0 }}
       className="mb-8 pt-4"
     >
-      <h1 className="text-2xl font-bold tracking-tight text-slate-800">
+      <h1 className="text-2xl font-bold tracking-tight text-ink">
         {titleText}
-        {hasPeriod && <span className="text-pink-400">.</span>}
+        {hasPeriod && <span className="text-accent">.</span>}
       </h1>
-      <p className="text-sm text-slate-500 mt-1">{subtitle}</p>
+      <p className="text-sm text-subtle mt-1">{subtitle}</p>
     </motion.header>
   );
 };

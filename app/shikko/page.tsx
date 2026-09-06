@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { LocationInput } from "../../components/LocationInput";
 import { EtcUpload } from "../../components/EtcUpload";
-import { YuiLoading } from "../../components/YuiLoading";
+import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { supabase } from "../../lib/supabase";
 import { useReportsContext } from "../../contexts/ReportsContext";
 
@@ -47,29 +47,29 @@ export default function ShikkoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-700 font-sans selection:bg-pink-100 p-6 pb-32">
+    <div className="min-h-screen bg-paper text-ink font-sans selection:bg-accent-light p-6 pb-32">
       <header className="mb-8 pt-4 flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="p-2 bg-white/70 backdrop-blur-md border border-white/40 rounded-full shadow-sm text-slate-500 hover:text-slate-700 transition-colors"
+          className="p-2 bg-white/70 backdrop-blur-md border border-white/40 rounded-full shadow-sm text-subtle hover:text-ink transition-colors"
         >
           <ChevronLeft size={20} />
         </button>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-800">
-            執行委員会用<span className="text-pink-400">.</span>
+          <h1 className="text-xl font-bold tracking-tight text-ink">
+            執行委員会用<span className="text-accent">.</span>
           </h1>
         </div>
       </header>
 
       <div className="space-y-10">
         <section>
-          <h2 className="text-lg font-bold tracking-tight text-slate-800 mb-4 px-2">目的地検索</h2>
+          <h2 className="text-lg font-bold tracking-tight text-ink mb-4 px-2">目的地検索</h2>
           <LocationInput onLocationCalculated={setLocationData} />
         </section>
 
         <section>
-          <h2 className="text-lg font-bold tracking-tight text-slate-800 mb-4 px-2">ETC連携</h2>
+          <h2 className="text-lg font-bold tracking-tight text-ink mb-4 px-2">ETC連携</h2>
           <EtcUpload onDataParsed={setEtcData} />
         </section>
 
@@ -83,9 +83,9 @@ export default function ShikkoPage() {
               <button
                 onClick={handleSubmitReport}
                 disabled={isSubmitting}
-                className="w-full mt-6 bg-slate-800 text-white font-bold py-4 rounded-[24px] shadow-lg flex justify-center items-center gap-2 hover:bg-slate-700 transition-colors disabled:opacity-50"
+                className="w-full mt-6 bg-accent text-white font-bold py-4 rounded-[18px] shadow-lg flex justify-center items-center gap-2 hover:bg-accent-dark transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? <YuiLoading className="scale-50" /> : "この内容で申請を作成する"}
+                {isSubmitting ? <LoadingSpinner className="scale-50" /> : "この内容で申請を作成する"}
               </button>
             </motion.div>
           )}

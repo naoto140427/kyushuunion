@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UploadCloud, CheckCircle2, AlertCircle } from "lucide-react";
 import Papa from "papaparse";
 import { cn } from "../lib/utils";
-import { YuiLoading } from "./YuiLoading";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 type UploadState = "idle" | "dragging" | "loading" | "success" | "error";
 
@@ -22,7 +22,7 @@ interface EtcCsvRow {
   [key: string]: any;
 }
 
-import { YUI_TRANSITION } from "../lib/utils";
+import { EASE_TRANSITION } from "../lib/utils";
 const TARGET_DATE = "26/04/04";
 
 export const EtcUpload: React.FC<{ onDataParsed?: (data: ParsedEtcData | null) => void }> = ({ onDataParsed }) => {
@@ -164,10 +164,10 @@ export const EtcUpload: React.FC<{ onDataParsed?: (data: ParsedEtcData | null) =
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            transition={YUI_TRANSITION}
-            className="flex flex-col items-center justify-center w-full min-h-[200px] bg-white/50 backdrop-blur-md rounded-[32px] border border-white/40 shadow-[0_4px_20px_rgb(0,0,0,0.02)]"
+            transition={EASE_TRANSITION}
+            className="flex flex-col items-center justify-center w-full min-h-[200px] bg-white/50 backdrop-blur-md rounded-[22px] border border-white/40 shadow-[0_4px_20px_rgb(0,0,0,0.02)]"
           >
-            <YuiLoading />
+            <LoadingSpinner />
           </motion.div>
         ) : uploadState === "success" && parsedData ? (
           <motion.div
@@ -175,32 +175,32 @@ export const EtcUpload: React.FC<{ onDataParsed?: (data: ParsedEtcData | null) =
             initial={{ opacity: 0, scale: 0.9, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -10 }}
-            transition={YUI_TRANSITION}
-            className="bg-white/70 backdrop-blur-md border border-white/40 p-6 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
+            transition={EASE_TRANSITION}
+            className="bg-white/70 backdrop-blur-md border border-white/40 p-6 rounded-[22px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
           >
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-400 rounded-l-full" />
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-success rounded-l-full" />
 
             <div className="flex items-start gap-4 mb-4">
-              <div className="bg-emerald-50 text-emerald-500 p-3 rounded-[20px]">
+              <div className="bg-success-light text-success p-3 rounded-[16px]">
                 <CheckCircle2 size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">読み込み完了</h3>
-                <p className="text-sm text-slate-500">ETCの利用履歴を正常に抽出しました</p>
+                <h3 className="text-lg font-bold text-ink">読み込み完了</h3>
+                <p className="text-sm text-subtle">ETCの利用履歴を正常に抽出しました</p>
               </div>
             </div>
 
-            <div className="space-y-3 bg-white/50 p-4 rounded-[24px] mb-4">
+            <div className="space-y-3 bg-white/50 p-4 rounded-[18px] mb-4">
               <div>
-                <p className="text-xs text-slate-400 mb-1">利用経路 ({TARGET_DATE})</p>
-                <p className="text-sm font-medium text-slate-700 leading-relaxed">
+                <p className="text-xs text-subtle mb-1">利用経路 ({TARGET_DATE})</p>
+                <p className="text-sm font-medium text-ink leading-relaxed">
                   {parsedData.route || "経路データなし"}
                 </p>
               </div>
-              <div className="h-px w-full bg-slate-200/50" />
+              <div className="h-px w-full bg-ink/5" />
               <div>
-                <p className="text-xs text-slate-400 mb-1">合計金額</p>
-                <p className="text-2xl font-bold text-slate-800">
+                <p className="text-xs text-subtle mb-1">合計金額</p>
+                <p className="text-2xl font-bold text-ink">
                   ¥{parsedData.totalCost.toLocaleString()}
                 </p>
               </div>
@@ -208,7 +208,7 @@ export const EtcUpload: React.FC<{ onDataParsed?: (data: ParsedEtcData | null) =
 
             <button
               onClick={resetUpload}
-              className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[20px] text-sm font-medium transition-colors"
+              className="w-full py-3 bg-ink/5 hover:bg-ink/10 text-subtle rounded-[16px] text-sm font-medium transition-colors"
             >
               別のファイルを読み込む
             </button>
@@ -219,7 +219,7 @@ export const EtcUpload: React.FC<{ onDataParsed?: (data: ParsedEtcData | null) =
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            transition={YUI_TRANSITION}
+            transition={EASE_TRANSITION}
           >
             <label
               onDragOver={handleDragOver}
@@ -227,10 +227,10 @@ export const EtcUpload: React.FC<{ onDataParsed?: (data: ParsedEtcData | null) =
               onDrop={handleDrop}
               className={cn(
                 "relative flex flex-col items-center justify-center w-full min-h-[200px] p-6 text-center cursor-pointer transition-all duration-300",
-                "bg-white/50 backdrop-blur-md rounded-[32px] border-2 border-dashed shadow-[0_4px_20px_rgb(0,0,0,0.02)] overflow-hidden group",
+                "bg-white/50 backdrop-blur-md rounded-[22px] border-2 border-dashed shadow-[0_4px_20px_rgb(0,0,0,0.02)] overflow-hidden group",
                 uploadState === "dragging"
-                  ? "border-pink-400 bg-pink-50/50 scale-[1.02]"
-                  : "border-slate-300/50 hover:border-pink-300 hover:bg-white/80"
+                  ? "border-accent bg-accent-light/50 scale-[1.02]"
+                  : "border-ink/10 hover:border-accent/40 hover:bg-white/80"
               )}
             >
               <input
@@ -242,19 +242,19 @@ export const EtcUpload: React.FC<{ onDataParsed?: (data: ParsedEtcData | null) =
 
               <motion.div
                 animate={uploadState === "dragging" ? { y: -5, scale: 1.1 } : { y: 0, scale: 1 }}
-                transition={YUI_TRANSITION}
+                transition={EASE_TRANSITION}
                 className={cn(
-                  "p-4 rounded-[24px] mb-3 transition-colors duration-300",
-                  uploadState === "dragging" ? "bg-pink-100 text-pink-500" : "bg-slate-100 text-slate-400 group-hover:bg-pink-50 group-hover:text-pink-400"
+                  "p-4 rounded-[18px] mb-3 transition-colors duration-300",
+                  uploadState === "dragging" ? "bg-accent-light text-accent" : "bg-ink/5 text-subtle group-hover:bg-accent-light group-hover:text-accent"
                 )}
               >
                 <UploadCloud size={32} />
               </motion.div>
 
-              <h3 className="text-base font-bold text-slate-700 mb-1">
+              <h3 className="text-base font-bold text-ink mb-1">
                 ETC CSVファイルをアップロード
               </h3>
-              <p className="text-xs text-slate-500 max-w-[200px] leading-relaxed">
+              <p className="text-xs text-subtle max-w-[200px] leading-relaxed">
                 タップしてファイルを選択するか、ここにドラッグ＆ドロップしてください
               </p>
 
@@ -262,7 +262,7 @@ export const EtcUpload: React.FC<{ onDataParsed?: (data: ParsedEtcData | null) =
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 flex items-center gap-1.5 text-xs text-red-500 bg-red-50 px-3 py-1.5 rounded-[16px]"
+                  className="mt-4 flex items-center gap-1.5 text-xs text-alert bg-alert-light px-3 py-1.5 rounded-[12px]"
                 >
                   <AlertCircle size={14} />
                   <span>{errorMessage}</span>

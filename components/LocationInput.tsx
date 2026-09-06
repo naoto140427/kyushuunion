@@ -4,8 +4,8 @@ import React, { useState, useCallback, useRef } from "react";
 import { useJsApiLoader, Autocomplete, DistanceMatrixService } from "@react-google-maps/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Navigation, Coins } from "lucide-react";
-import { cn, YUI_TRANSITION } from "../lib/utils";
-import { YuiLoading } from "./YuiLoading";
+import { cn, EASE_TRANSITION } from "../lib/utils";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 const libraries: ("places")[] = ["places"];
 
@@ -96,21 +96,21 @@ export const LocationInput: React.FC<LocationInputProps> = ({ onLocationCalculat
   };
 
   if (loadError) {
-    return <div className="text-red-500 text-sm p-4 bg-red-50 rounded-[24px]">Google Maps APIの読み込みに失敗しました</div>;
+    return <div className="text-alert text-sm p-4 bg-alert-light rounded-[18px]">Google Maps APIの読み込みに失敗しました</div>;
   }
 
   if (!isLoaded) {
     return (
-      <div className="flex justify-center items-center h-20 bg-white/50 backdrop-blur-md rounded-[32px] border border-white/40">
-        <YuiLoading />
+      <div className="flex justify-center items-center h-20 bg-white/50 backdrop-blur-md rounded-[22px] border border-white/40">
+        <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-white/50 backdrop-blur-md rounded-[32px] border border-white/40 shadow-[0_4px_20px_rgb(0,0,0,0.02)] p-6">
-      <div className="mb-4 flex items-center gap-2 text-slate-700">
-        <MapPin size={20} className="text-pink-400" />
+    <div className="w-full bg-white/50 backdrop-blur-md rounded-[22px] border border-white/40 shadow-[0_4px_20px_rgb(0,0,0,0.02)] p-6">
+      <div className="mb-4 flex items-center gap-2 text-ink">
+        <MapPin size={20} className="text-accent" />
         <h3 className="text-sm font-bold">目的地を検索</h3>
       </div>
 
@@ -123,13 +123,13 @@ export const LocationInput: React.FC<LocationInputProps> = ({ onLocationCalculat
             type="text"
             placeholder="施設名や住所を入力..."
             ref={inputRef}
-            className="w-full bg-white/70 border-2 border-white/60 focus:border-pink-300 focus:bg-white text-slate-700 text-sm rounded-[24px] py-4 px-5 shadow-inner transition-all outline-none"
+            className="w-full bg-white/70 border-2 border-white/60 focus:border-accent focus:bg-white text-ink text-sm rounded-[18px] py-4 px-5 shadow-inner transition-all outline-none"
           />
         </Autocomplete>
         {destination && !isCalculating && (
           <button
             onClick={handleClear}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full w-6 h-6 flex items-center justify-center text-xs"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-subtle hover:text-ink bg-ink/5 rounded-full w-6 h-6 flex items-center justify-center text-xs"
           >
             ✕
           </button>
@@ -143,11 +143,11 @@ export const LocationInput: React.FC<LocationInputProps> = ({ onLocationCalculat
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={YUI_TRANSITION}
+            transition={EASE_TRANSITION}
             className="flex flex-col items-center justify-center py-4"
           >
-            <YuiLoading />
-            <p className="text-xs text-slate-400 mt-2 font-medium">距離を計算中...</p>
+            <LoadingSpinner />
+            <p className="text-xs text-subtle mt-2 font-medium">距離を計算中...</p>
           </motion.div>
         ) : result ? (
           <motion.div
@@ -155,35 +155,35 @@ export const LocationInput: React.FC<LocationInputProps> = ({ onLocationCalculat
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={YUI_TRANSITION}
-            className="bg-white/80 border border-white/50 rounded-[28px] p-5 shadow-sm space-y-4 relative overflow-hidden"
+            transition={EASE_TRANSITION}
+            className="bg-white/80 border border-white/50 rounded-[20px] p-5 shadow-sm space-y-4 relative overflow-hidden"
           >
-             <div className="absolute top-0 left-0 w-1.5 h-full bg-pink-400 rounded-l-full" />
+             <div className="absolute top-0 left-0 w-1.5 h-full bg-accent rounded-l-full" />
 
              <div>
-               <p className="text-[10px] font-bold text-pink-400 uppercase tracking-wider mb-1">Destination</p>
-               <p className="text-sm font-bold text-slate-700 leading-snug">{destination}</p>
+               <p className="text-[10px] font-bold text-accent uppercase tracking-wider mb-1">Destination</p>
+               <p className="text-sm font-bold text-ink leading-snug">{destination}</p>
              </div>
 
-             <div className="h-px w-full bg-slate-100" />
+             <div className="h-px w-full bg-ink/5" />
 
              <div className="grid grid-cols-2 gap-4">
                <div>
-                 <div className="flex items-center gap-1.5 text-slate-500 mb-1">
+                 <div className="flex items-center gap-1.5 text-subtle mb-1">
                    <Navigation size={14} />
                    <span className="text-[10px] font-bold tracking-wider">往復距離</span>
                  </div>
-                 <p className="text-xl font-black text-slate-800">
-                   {result.distance} <span className="text-xs font-bold text-slate-500">km</span>
+                 <p className="text-xl font-black text-ink">
+                   {result.distance} <span className="text-xs font-bold text-subtle">km</span>
                  </p>
                </div>
 
                <div>
-                 <div className="flex items-center gap-1.5 text-slate-500 mb-1">
+                 <div className="flex items-center gap-1.5 text-subtle mb-1">
                    <Coins size={14} />
                    <span className="text-[10px] font-bold tracking-wider">自家用車代</span>
                  </div>
-                 <p className="text-xl font-black text-pink-500">
+                 <p className="text-xl font-black text-accent">
                    ¥{result.allowance.toLocaleString()}
                  </p>
                </div>

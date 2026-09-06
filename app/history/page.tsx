@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Receipt, CheckCircle2, Download } from "lucide-react";
 import { Header } from "../../components/ui/Header";
-import { YuiLoading } from "../../components/YuiLoading";
+import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { useReportsContext } from "../../contexts/ReportsContext";
-import { cn, YUI_TRANSITION } from "../../lib/utils";
+import { cn } from "../../lib/utils";
 import { Database } from "../../types/database.types";
 import { supabase } from "../../lib/supabase";
 
@@ -85,15 +85,15 @@ export default function HistoryPage() {
   const currentReports = activeTab === "pending" ? pendingReports : submittedReports;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-700 font-sans selection:bg-pink-100 p-6 pb-32">
+    <div className="min-h-screen bg-paper text-ink font-sans selection:bg-accent-light p-6 pb-32">
       <Header title="履歴." subtitle="過去の申請状況を確認できます" />
 
-      <div className="flex bg-slate-200/50 p-1 rounded-full mb-6">
+      <div className="flex bg-ink/5 p-1 rounded-full mb-6">
         <button
           onClick={() => setActiveTab("pending")}
           className={cn(
             "flex-1 py-2 text-sm font-bold rounded-full transition-all flex items-center justify-center gap-2",
-            activeTab === "pending" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"
+            activeTab === "pending" ? "bg-white text-ink shadow-sm" : "text-subtle"
           )}
         >
           <Receipt size={16} />
@@ -103,7 +103,7 @@ export default function HistoryPage() {
           onClick={() => setActiveTab("submitted")}
           className={cn(
             "flex-1 py-2 text-sm font-bold rounded-full transition-all flex items-center justify-center gap-2",
-            activeTab === "submitted" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"
+            activeTab === "submitted" ? "bg-white text-ink shadow-sm" : "text-subtle"
           )}
         >
           <CheckCircle2 size={16} />
@@ -120,7 +120,7 @@ export default function HistoryPage() {
             exit={{ opacity: 0 }}
             className="py-10 flex justify-center"
           >
-            <YuiLoading />
+            <LoadingSpinner />
           </motion.div>
         ) : currentReports.length > 0 ? (
           <motion.div
@@ -136,33 +136,33 @@ export default function HistoryPage() {
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white/70 backdrop-blur-md border border-white/40 p-5 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
+                className="bg-white/70 backdrop-blur-md border border-white/40 p-5 rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
               >
-                <div className={cn("absolute top-0 left-0 w-1.5 h-full rounded-l-full", activeTab === 'pending' ? 'bg-pink-400' : 'bg-slate-400')} />
+                <div className={cn("absolute top-0 left-0 w-1.5 h-full rounded-l-full", activeTab === 'pending' ? 'bg-alert' : 'bg-ink/20')} />
 
                 <div className="flex justify-between items-start pl-2 mb-3">
                   <div>
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{formatReportDate(report.date)}</span>
-                    <h3 className="text-base font-bold text-slate-800 mt-1">{getReportTypeLabel(report.type)}</h3>
+                    <span className="text-xs font-bold text-subtle uppercase tracking-wider">{formatReportDate(report.date)}</span>
+                    <h3 className="text-base font-bold text-ink mt-1">{getReportTypeLabel(report.type)}</h3>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">交通費</span>
-                    <p className="text-sm font-bold text-pink-500">¥{report.travel_allowance.toLocaleString()}</p>
+                    <span className="text-xs font-bold text-subtle uppercase tracking-wider">交通費</span>
+                    <p className="text-sm font-bold text-accent">¥{report.travel_allowance.toLocaleString()}</p>
                   </div>
                 </div>
 
                 <div className="pl-2 mb-4">
-                  <p className="text-sm text-slate-600 line-clamp-1">{getDestinationsPreview(report.destinations)}</p>
+                  <p className="text-sm text-ink/70 line-clamp-1">{getDestinationsPreview(report.destinations)}</p>
                 </div>
 
                 <div className="pl-2 flex flex-col gap-2">
                   <button
                     onClick={() => handleDownloadExcel(report)}
                     disabled={downloadingId === report.id}
-                    className="w-full bg-blue-50 text-blue-600 border border-blue-100 text-xs px-4 py-3 rounded-[16px] font-bold shadow-sm hover:bg-blue-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full bg-accent-light text-accent border border-accent/10 text-xs px-4 py-3 rounded-[14px] font-bold shadow-sm hover:bg-accent/10 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {downloadingId === report.id ? (
-                      <YuiLoading className="scale-50 h-4" />
+                      <LoadingSpinner className="scale-50 h-4" />
                     ) : (
                       <>
                         <Download size={16} />
@@ -175,7 +175,7 @@ export default function HistoryPage() {
                       <button
                         onClick={() => handleStatusChange(report.id, 'submitted')}
                         disabled={updatingId === report.id}
-                        className="bg-slate-800 text-white text-xs px-4 py-2 rounded-[16px] font-medium shadow-sm hover:bg-slate-700 transition-colors disabled:opacity-50"
+                        className="bg-accent text-white text-xs px-4 py-2 rounded-[14px] font-medium shadow-sm hover:bg-accent-dark transition-colors disabled:opacity-50"
                       >
                         {updatingId === report.id ? "更新中..." : "提出済みにする"}
                       </button>
@@ -183,7 +183,7 @@ export default function HistoryPage() {
                       <button
                         onClick={() => handleStatusChange(report.id, 'pending')}
                         disabled={updatingId === report.id}
-                        className="bg-slate-100 text-slate-600 text-xs px-4 py-2 rounded-[16px] font-medium hover:bg-slate-200 transition-colors disabled:opacity-50"
+                        className="bg-ink/5 text-subtle text-xs px-4 py-2 rounded-[14px] font-medium hover:bg-ink/10 transition-colors disabled:opacity-50"
                       >
                         {updatingId === report.id ? "更新中..." : "未提出に戻す"}
                       </button>
@@ -201,7 +201,7 @@ export default function HistoryPage() {
             exit={{ opacity: 0 }}
             className="text-center py-10"
           >
-            <p className="text-sm text-slate-400 font-medium">データがありません</p>
+            <p className="text-sm text-subtle font-medium">データがありません</p>
           </motion.div>
         )}
       </AnimatePresence>

@@ -7,7 +7,7 @@ import { Car, Building2, Receipt } from "lucide-react";
 import { Header } from "../components/ui/Header";
 import { ActionCard } from "../components/ui/ActionCard";
 import { UnsubmittedAlert } from "../components/ui/UnsubmittedAlert";
-import { YuiLoading } from "../components/YuiLoading";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useReportsContext } from "../contexts/ReportsContext";
 
 export default function Home() {
@@ -81,7 +81,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-700 font-sans selection:bg-pink-100 p-6 pb-32">
+    <div className="min-h-screen bg-paper text-ink font-sans selection:bg-accent-light p-6 pb-32">
       <Header title="精算アプリ." subtitle="今日も一日お疲れ様です！" />
 
       <div className="grid grid-cols-1 gap-5 mb-10">
@@ -90,7 +90,6 @@ export default function Home() {
           title="執行委員会用"
           description="開催場所を検索して自動計算"
           icon={<Building2 size={28} />}
-          iconContainerClassName="bg-blue-50 text-blue-500"
         />
 
         <ActionCard
@@ -98,7 +97,6 @@ export default function Home() {
           title="職場訪問用"
           description="複数店舗のルート距離を自動計算"
           icon={<Car size={28} />}
-          iconContainerClassName="bg-emerald-50 text-emerald-500"
         />
 
         <ActionCard
@@ -106,7 +104,6 @@ export default function Home() {
           title="履歴管理"
           description="過去の申請状況と提出管理"
           icon={<Receipt size={28} />}
-          iconContainerClassName="bg-slate-50 text-slate-500"
         />
       </div>
 
@@ -119,7 +116,7 @@ export default function Home() {
             exit={{ opacity: 0 }}
             className="py-10 flex justify-center"
           >
-            <YuiLoading />
+            <LoadingSpinner />
           </motion.div>
         ) : oldestPendingReport ? (
           <UnsubmittedAlert
@@ -137,7 +134,7 @@ export default function Home() {
             exit={{ opacity: 0 }}
             className="text-center py-6"
           >
-            <p className="text-sm text-slate-400 font-medium">未提出の精算はありません ✨</p>
+            <p className="text-sm text-subtle font-medium">未提出の精算はありません ✨</p>
           </motion.div>
         )}
       </AnimatePresence>

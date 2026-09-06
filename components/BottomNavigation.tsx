@@ -15,20 +15,20 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ unsubmittedC
 
   return (
     <div className="fixed bottom-6 left-0 w-full px-6 flex justify-center z-50">
-      <div className="bg-white/70 backdrop-blur-md border border-white/40 p-1.5 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex gap-1 w-full max-w-sm">
+      <div className="bg-white/70 backdrop-blur-md border border-white/40 p-1.5 rounded-[22px] shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex gap-1 w-full max-w-sm">
         <Link
           href="/"
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-3 rounded-[24px] text-sm font-medium transition-all duration-300 relative",
+            "flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-sm font-medium transition-all duration-300 relative",
             pathname === "/"
-              ? "bg-slate-100 text-slate-800 shadow-sm"
-              : "text-slate-400 hover:text-slate-500"
+              ? "bg-ink/5 text-ink shadow-sm"
+              : "text-subtle hover:text-ink"
           )}
         >
           <Home size={18} />
           ホーム
           {unsubmittedCount > 0 && (
-            <span className="bg-pink-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+            <span className="bg-alert text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
               {unsubmittedCount}
             </span>
           )}
@@ -36,10 +36,10 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ unsubmittedC
         <Link
           href="/history"
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-3 rounded-[24px] text-sm font-medium transition-all duration-300",
+            "flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-sm font-medium transition-all duration-300",
             pathname === "/history"
-              ? "bg-slate-100 text-slate-800 shadow-sm"
-              : "text-slate-400 hover:text-slate-500"
+              ? "bg-ink/5 text-ink shadow-sm"
+              : "text-subtle hover:text-ink"
           )}
         >
           <History size={18} />
